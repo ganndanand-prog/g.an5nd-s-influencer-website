@@ -1,0 +1,299 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Hardened Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedAdminEmail() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.token.email == 'ganndanand@gmail.com' ||
+          request.auth.token.email == 'anand75io@moes.edu.mn'
+        );
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isVerifiedAdminEmail() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // --- Validation Helpers ---
+    function isValidSubmission(data) {
+      return data.keys().hasAll([
+          'type', 'senderName', 'email', 'phone', 'message',
+          'status', 'emailDelivered', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'type', 'senderName', 'email', 'phone', 'message',
+          'brandName', 'collabType', 'category', 'deadline', 'budget',
+          'status', 'adminNote', 'emailDelivered', 'source', 'createdAt', 'updatedAt'
+        ])
+        && data.type is string && data.type in ['collaboration', 'contact']
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.phone is string && data.phone.size() >= 4 && data.phone.size() <= 40
+        && data.message is string && data.message.size() >= 1 && data.message.size() <= 3000
+        && data.status is string && data.status in ['new', 'contacted', 'in_progress', 'completed', 'archived']
+        && data.emailDelivered is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (!('brandName' in data) || (data.brandName is string && data.brandName.size() <= 160))
+        && (!('collabType' in data) || (data.collabType is string && data.collabType.size() <= 120))
+        && (!('category' in data) || (data.category is string && data.category.size() <= 120))
+        && (!('deadline' in data) || (data.deadline is string && data.deadline.size() <= 120))
+        && (!('budget' in data) || (data.budget is string && data.budget.size() <= 120))
+        && (!('adminNote' in data) || (data.adminNote is string && data.adminNote.size() <= 1000))
+        && (!('source' in data) || (data.source is string && data.source.size() <= 60));
+    }
+
+    function isValidContactAction(data) {
+      return data.keys().hasAll(['actionType', 'label', 'section', 'createdAt'])
+        && data.keys().hasOnly(['actionType', 'label', 'section', 'metadata', 'createdAt'])
+        && data.actionType is string && data.actionType in [
+          'collaboration_submit',
+          'contact_submit',
+          'phone_click',
+          'phone_copy',
+          'email_copy',
+          'email_click',
+          'instagram_click',
+          'package_select'
+        ]
+        && data.label is string && data.label.size() >= 1 && data.label.size() <= 200
+        && data.section is string && data.section.size() >= 1 && data.section.size() <= 80
+        && (!('metadata' in data) || (data.metadata is string && data.metadata.size() <= 300))
+        && data.createdAt is timestamp;
+    }
+
+    function isValidServicePackage(data) {
+      return data.keys().hasAll([
+          'title', 'priceNote', 'deliverables', 'timeline', 'idealFor',
+          'popular', 'active', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'badge', 'priceAmount', 'priceNote', 'deliverables',
+          'timeline', 'idealFor', 'popular', 'active', 'sortOrder',
+          'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && (!('badge' in data) || (data.badge is string && data.badge.size() <= 80))
+        && (!('priceAmount' in data) || (data.priceAmount is string && data.priceAmount.size() <= 80))
+        && data.priceNote is string && data.priceNote.size() >= 1 && data.priceNote.size() <= 300
+        && data.deliverables is list && data.deliverables.size() >= 1 && data.deliverables.size() <= 15
+        && data.deliverables[0] is string && data.deliverables[0].size() <= 300
+        && data.timeline is string && data.timeline.size() >= 1 && data.timeline.size() <= 120
+        && data.idealFor is string && data.idealFor.size() >= 1 && data.idealFor.size() <= 200
+        && data.popular is bool
+        && data.active is bool
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSiteContent(data) {
+      return data.keys().hasAll([
+          'greeting', 'heroTitle', 'heroSubtitle', 'bioPrimary', 'bioSecondary',
+          'phone', 'email', 'instagramHandle', 'instagramUrl', 'location',
+          'aboutIntro', 'aboutQuote', 'footerSlogan',
+          'totalViews', 'avgViews', 'engagementRate', 'targetAge', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'greeting', 'heroTitle', 'heroSubtitle', 'bioPrimary', 'bioSecondary',
+          'phone', 'email', 'instagramHandle', 'instagramUrl', 'location',
+          'aboutIntro', 'aboutQuote', 'footerSlogan',
+          'totalViews', 'avgViews', 'engagementRate', 'targetAge', 'updatedAt'
+        ])
+        && data.greeting is string && data.greeting.size() >= 1 && data.greeting.size() <= 200
+        && data.heroTitle is string && data.heroTitle.size() >= 1 && data.heroTitle.size() <= 160
+        && data.heroSubtitle is string && data.heroSubtitle.size() >= 1 && data.heroSubtitle.size() <= 200
+        && data.bioPrimary is string && data.bioPrimary.size() >= 1 && data.bioPrimary.size() <= 1000
+        && data.bioSecondary is string && data.bioSecondary.size() >= 1 && data.bioSecondary.size() <= 1000
+        && data.phone is string && data.phone.size() >= 4 && data.phone.size() <= 40
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.instagramHandle is string && data.instagramHandle.size() >= 1 && data.instagramHandle.size() <= 60
+        && data.instagramUrl is string && data.instagramUrl.size() >= 1 && data.instagramUrl.size() <= 240
+        && data.location is string && data.location.size() >= 1 && data.location.size() <= 120
+        && data.aboutIntro is string && data.aboutIntro.size() >= 1 && data.aboutIntro.size() <= 1000
+        && data.aboutQuote is string && data.aboutQuote.size() >= 1 && data.aboutQuote.size() <= 1000
+        && data.footerSlogan is string && data.footerSlogan.size() >= 1 && data.footerSlogan.size() <= 200
+        && data.totalViews is string && data.totalViews.size() >= 1 && data.totalViews.size() <= 60
+        && data.avgViews is string && data.avgViews.size() >= 1 && data.avgViews.size() <= 60
+        && data.engagementRate is string && data.engagementRate.size() >= 1 && data.engagementRate.size() <= 60
+        && data.targetAge is string && data.targetAge.size() >= 1 && data.targetAge.size() <= 60
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidReelWork(data) {
+      return data.keys().hasAll([
+          'title', 'views', 'likes', 'comments', 'shares',
+          'hook', 'theme', 'tag', 'image', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'views', 'likes', 'comments', 'shares',
+          'hook', 'theme', 'tag', 'image', 'videoUrl', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.views is string && data.views.size() >= 1 && data.views.size() <= 60
+        && data.likes is string && data.likes.size() >= 1 && data.likes.size() <= 60
+        && data.comments is string && data.comments.size() >= 1 && data.comments.size() <= 60
+        && data.shares is string && data.shares.size() >= 1 && data.shares.size() <= 60
+        && data.hook is string && data.hook.size() >= 1 && data.hook.size() <= 240
+        && data.theme is string && data.theme.size() >= 1 && data.theme.size() <= 80
+        && data.tag is string && data.tag.size() >= 1 && data.tag.size() <= 60
+        && data.image is string && data.image.size() >= 1 && data.image.size() <= 500
+        && (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 500))
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    // 1. Submissions / Orders (Collaboration Requests & Direct Contact Messages)
+    // Public visitors can submit (create) with strict schema + 'new' status + server timestamps.
+    // Only verified Admin can read, list, update status/adminNote, or delete (protects PII).
+    match /submissions/{submissionId} {
+      allow get: if isSignedIn() && isValidId(submissionId) && isAdmin();
+      allow list: if isVerifiedAdminEmail();
+
+      allow create: if isValidId(submissionId)
+        && isValidSubmission(incoming())
+        && incoming().status == 'new'
+        && !('adminNote' in incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(submissionId)
+        && isValidSubmission(incoming())
+        && isAdmin()
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['adminNote', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminNote', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['emailDelivered', 'updatedAt'])
+        );
+
+      allow delete: if isSignedIn() && isValidId(submissionId) && isAdmin();
+    }
+
+    // 2. Contact Actions (Website engagement & contact button actions)
+    // Public visitors can log actions; only Admin can read or delete.
+    match /contactActions/{actionId} {
+      allow get: if isSignedIn() && isValidId(actionId) && isAdmin();
+      allow list: if isVerifiedAdminEmail();
+
+      allow create: if isValidId(actionId)
+        && isValidContactAction(incoming())
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(actionId) && isAdmin();
+    }
+
+    // 3. Services (Public portfolio service packages managed by Admin)
+    match /services/{serviceId} {
+      allow get: if isValidId(serviceId) && (existing().active == true || isAdmin());
+      allow list: if existing().active == true || isVerifiedAdminEmail();
+
+      allow create: if isSignedIn()
+        && isValidId(serviceId)
+        && isValidServicePackage(incoming())
+        && isAdmin()
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(serviceId)
+        && isValidServicePackage(incoming())
+        && isAdmin()
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'badge', 'priceAmount', 'priceNote', 'deliverables',
+          'timeline', 'idealFor', 'popular', 'active', 'sortOrder', 'updatedAt'
+        ]);
+
+      allow delete: if isSignedIn() && isValidId(serviceId) && isAdmin();
+    }
+
+    // 4. Site Content (Public portfolio copy & metrics managed by Admin)
+    match /siteContent/{docId} {
+      allow get: if isValidId(docId);
+      allow list: if isVerifiedAdminEmail();
+
+      allow create: if isSignedIn()
+        && isValidId(docId)
+        && isValidSiteContent(incoming())
+        && isAdmin()
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(docId)
+        && isValidSiteContent(incoming())
+        && isAdmin()
+        && incoming().updatedAt == request.time;
+
+      allow delete: if isSignedIn() && isValidId(docId) && isAdmin();
+    }
+
+    // 5. Featured Reels Works (Public showcase reels managed by Admin Content)
+    match /reelsWorks/{reelId} {
+      allow get: if isValidId(reelId);
+      allow list: if existing().sortOrder >= 0;
+
+      allow create: if isSignedIn()
+        && isValidId(reelId)
+        && isValidReelWork(incoming())
+        && isAdmin()
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(reelId)
+        && isValidReelWork(incoming())
+        && isAdmin()
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'views', 'likes', 'comments', 'shares',
+          'hook', 'theme', 'tag', 'image', 'videoUrl', 'sortOrder', 'updatedAt'
+        ]);
+
+      allow delete: if isSignedIn() && isValidId(reelId) && isAdmin();
+    }
+
+    // 6. Admins collection (read-only by owner/admin, managed out-of-band)
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isVerifiedAdminEmail());
+      allow list: if isVerifiedAdminEmail();
+      allow create, update, delete: if false;
+    }
+  }
+}

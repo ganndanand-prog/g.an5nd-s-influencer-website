@@ -1,0 +1,487 @@
+{
+  "entities": {
+    "Submission": {
+      "title": "Submission",
+      "description": "A brand collaboration request, service order, or direct contact message submitted via the portfolio website.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["collaboration", "contact"],
+          "description": "Whether the submission came from the brand collaboration form or direct contact message form."
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Name of the sender or contact person."
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "Sender email address."
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 40,
+          "description": "Sender phone number."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000,
+          "description": "Detailed message or campaign concept."
+        },
+        "brandName": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Optional brand or organization name for collaboration requests."
+        },
+        "collabType": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Optional content format (e.g., Reels, Story, Event)."
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Optional product or industry category."
+        },
+        "deadline": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Optional target deadline."
+        },
+        "budget": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Optional budget proposal."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "contacted", "in_progress", "completed", "archived"],
+          "description": "Processing status of the order or submission."
+        },
+        "adminNote": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Optional internal admin note for tracking order execution."
+        },
+        "emailDelivered": {
+          "type": "boolean",
+          "description": "Whether email notification delivery succeeded."
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Form source identifier."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the submission was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the submission was last updated."
+        }
+      },
+      "required": [
+        "type",
+        "senderName",
+        "email",
+        "phone",
+        "message",
+        "status",
+        "emailDelivered",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ContactAction": {
+      "title": "ContactAction",
+      "description": "Contact and engagement actions performed by visitors on the website.",
+      "type": "object",
+      "properties": {
+        "actionType": {
+          "type": "string",
+          "enum": [
+            "collaboration_submit",
+            "contact_submit",
+            "phone_click",
+            "phone_copy",
+            "email_copy",
+            "email_click",
+            "instagram_click",
+            "package_select"
+          ],
+          "description": "Type of contact or engagement action performed."
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Human-readable description of the action."
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Website section where the action occurred."
+        },
+        "metadata": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Optional extra context such as selected package title."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the action was logged."
+        }
+      },
+      "required": ["actionType", "label", "section", "createdAt"]
+    },
+    "ServicePackage": {
+      "title": "ServicePackage",
+      "description": "Content creation & brand collaboration service package displayed in Pricing and managed by Admin.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Service package title."
+        },
+        "badge": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Optional badge label."
+        },
+        "priceAmount": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Optional display price or rate."
+        },
+        "priceNote": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "description": "Pricing description and flexibility note."
+        },
+        "deliverables": {
+          "type": "array",
+          "description": "List of deliverables included in the service package."
+        },
+        "timeline": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Expected turnaround timeline."
+        },
+        "idealFor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Target campaign use case."
+        },
+        "popular": {
+          "type": "boolean",
+          "description": "Whether this package is highlighted as most popular."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this service is currently active on the public site."
+        },
+        "sortOrder": {
+          "type": "number",
+          "description": "Display order index."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the service was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the service was last updated."
+        }
+      },
+      "required": [
+        "title",
+        "priceNote",
+        "deliverables",
+        "timeline",
+        "idealFor",
+        "popular",
+        "active",
+        "sortOrder",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SiteContent": {
+      "title": "SiteContent",
+      "description": "Editable website copy, contact details, about narrative, and headline Instagram metrics managed by Admin.",
+      "type": "object",
+      "properties": {
+        "greeting": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "heroTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "heroSubtitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "bioPrimary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "bioSecondary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 40
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "instagramHandle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "instagramUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "aboutIntro": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "aboutQuote": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "footerSlogan": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "totalViews": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "avgViews": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "engagementRate": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "targetAge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "greeting",
+        "heroTitle",
+        "heroSubtitle",
+        "bioPrimary",
+        "bioSecondary",
+        "phone",
+        "email",
+        "instagramHandle",
+        "instagramUrl",
+        "location",
+        "aboutIntro",
+        "aboutQuote",
+        "footerSlogan",
+        "totalViews",
+        "avgViews",
+        "engagementRate",
+        "targetAge",
+        "updatedAt"
+      ]
+    },
+    "ReelWork": {
+      "title": "ReelWork",
+      "description": "Featured Instagram Reels showcase item managed in Admin Content.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "views": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "likes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "comments": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "shares": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "hook": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "theme": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "videoUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "sortOrder": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "title",
+        "views",
+        "likes",
+        "comments",
+        "shares",
+        "hook",
+        "theme",
+        "tag",
+        "image",
+        "sortOrder",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized admin record for managing portfolio submissions and site content.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "Admin email address."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Admin role."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/submissions/{submissionId}": {
+      "schema": {
+        "$ref": "#/entities/Submission"
+      },
+      "description": "Stores collaboration requests, orders, and direct contact messages submitted from the website."
+    },
+    "/contactActions/{actionId}": {
+      "schema": {
+        "$ref": "#/entities/ContactAction"
+      },
+      "description": "Stores visitor contact actions (submissions, phone calls, copies, package selections, Instagram clicks)."
+    },
+    "/services/{serviceId}": {
+      "schema": {
+        "$ref": "#/entities/ServicePackage"
+      },
+      "description": "Stores content creation & marketing service packages shown publicly and edited by Admin."
+    },
+    "/siteContent/{docId}": {
+      "schema": {
+        "$ref": "#/entities/SiteContent"
+      },
+      "description": "Stores editable site copy, contact info, about narrative, and Instagram summary stats."
+    },
+    "/reelsWorks/{reelId}": {
+      "schema": {
+        "$ref": "#/entities/ReelWork"
+      },
+      "description": "Stores featured Instagram Reels works displayed on the site and managed by Admin."
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminUser"
+      },
+      "description": "Authorized admin UIDs allowed to manage submissions, services, and content."
+    }
+  }
+}
